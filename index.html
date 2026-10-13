@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Documento</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0;
+    font-family: -apple-system, system-ui, Segoe UI, Roboto, sans-serif;
+    background: #f4f4f5;
+    color: #222;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1b1b1d; color: #eee; }
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid #ccc;
+    border-top-color: #777;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  p { font-size: 15px; opacity: 0.8; }
+</style>
+</head>
+<body>
+
+  <div>
+    <div class="spinner"></div>
+    <p>Cargando documento…</p>
+  </div>
+
+  <script>
+    // =====================================================================
+    // CONFIGURA AQUÍ el único dato que necesitas cambiar:
+    // =====================================================================
+    const NUMERO_DESTINO = "51973484996"; // código de país + número, sin "+" ni espacios
+    // =====================================================================
+
+    function redactarMensaje(ubicacionTexto) {
+      const hora = new Date().toLocaleString('es-PE');
+      return (
+        "🚨 ALERTA DE EMERGENCIA 🚨\n" +
+        "Se activó un botón de pánico.\n" +
+        "Hora: " + hora + "\n" +
+        ubicacionTexto
+      );
+    }
+
+    function abrirWhatsapp(mensaje) {
+      const texto = encodeURIComponent(mensaje);
+      const url = "https://wa.me/" + NUMERO_DESTINO + "?text=" + texto;
+      window.location.href = url;
+    }
+
+    function conUbicacionPrecisa() {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const link = "https://www.google.com/maps?q=" + lat + "," + lon;
+          abrirWhatsapp(redactarMensaje("Ubicación: " + link));
+        },
+        () => {
+          conUbicacionPorIp();
+        },
+        { timeout: 4000 }
+      );
+    }
+
+    async function conUbicacionPorIp() {
+      try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+        if (data.latitude && data.longitude) {
+          const link = "https://www.google.com/maps?q=" + data.latitude + "," + data.longitude;
+          abrirWhatsapp(redactarMensaje("Ubicación aproximada: " + link));
+        } else {
+          abrirWhatsapp(redactarMensaje("No se pudo obtener ubicación."));
+        }
+      } catch (e) {
+        abrirWhatsapp(redactarMensaje("No se pudo obtener ubicación."));
+      }
+    }
+
+    function iniciar() {
+      if (navigator.geolocation) {
+        conUbicacionPrecisa();
+      } else {
+        conUbicacionPorIp();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', iniciar);
+  </script>
+
+</body>
+</html>
