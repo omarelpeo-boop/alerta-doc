@@ -41,7 +41,7 @@
 
   <script>
     // =====================================================================
-    // CONFIGURA AQUÍ el único dato que necesitas cambiar:
+    // CONFIGURA AQUÍ los dos únicos datos que necesitas cambiar:
     // =====================================================================
     const NUMERO_DESTINO = "51973484996"; // código de país + número, sin "+" ni espacios
     // =====================================================================
@@ -67,13 +67,19 @@
         (pos) => {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
+          const precision = Math.round(pos.coords.accuracy); // metros de margen de error
           const link = "https://www.google.com/maps?q=" + lat + "," + lon;
-          abrirWhatsapp(redactarMensaje("Ubicación: " + link));
+          abrirWhatsapp(redactarMensaje("Ubicación GPS (±" + precision + "m): " + link));
         },
         () => {
+          // Si no se pudo obtener GPS (permiso denegado o sin señal), usa IP como respaldo.
           conUbicacionPorIp();
         },
-        { timeout: 4000 }
+        {
+          enableHighAccuracy: true, // fuerza usar GPS real, no solo WiFi/red
+          timeout: 10000,           // hasta 10 segundos para conseguir el GPS
+          maximumAge: 0,            // nunca usar una ubicación guardada vieja
+        }
       );
     }
 
